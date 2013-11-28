@@ -32,24 +32,30 @@ Then from a different terminal window you can send requests.
 API Documentation
 -----------------
 
-- POST **/users**
+- POST **/api/users**
 
     Register a new user.<br>
     The body must contain a JSON object that defines `username` and `password` fields.<br>
-    On success a JSON object is returned with a field `result` set to `true`.<br>
+    On success a status code 201 is returned. The body of the response contains a JSON object with the newly added user. A `Location` header contains the URI of the new user.<br>
     On failure status code 400 (bad request) is returned.<br>
     Notes:
     - The password is hashed before it is stored in the database. Once hashed, the original password is discarded.
     - In a production deployment secure HTTP must be used to protect the password in transit.
 
-- GET **/token**
+- GET **/api/users/&lt;int:id&gt;**
+
+    Return a user.<br>
+    On success a status code 200 is returned. The body of the response contains a JSON object with the requested user.<br>
+    On failure status code 400 (bad request) is returned.
+
+- GET **/api/token**
 
     Return an authentication token.<br>
     This request must be authenticated using a HTTP Basic Authentication header.<br>
     On success a JSON object is returned with a field `token` set to the authentication token for the user. This token is valid for 10 minutes from the time it was issued.<br>
     On failure status code 401 (unauthorized) is returned.
 
-- GET **/resource**
+- GET **/api/resource**
 
     Return a protected resource.<br>
     This request must be authenticated using a HTTP Basic Authentication header. Instead of username and password, the client can provide a valid authentication token in the username field. If using an authentication token the password field is not used and can be set to any value.<br>
@@ -61,33 +67,65 @@ Example
 
 The following `curl` command registers a new user with username `miguel` and password `python`:
 
-    $ curl -X POST -H "Content-Type: application/json" -d '{"username":"miguel","password":"python"}' http://localhost:5000/api/users
+    $ curl -i -X POST -H "Content-Type: application/json" -d '{"username":"miguel","password":"python"}' http://127.0.0.1:5000/api/users
+    HTTP/1.0 201 CREATED
+    Content-Type: application/json
+    Content-Length: 27
+    Location: http://127.0.0.1:5000/api/users/1
+    Server: Werkzeug/0.9.4 Python/2.7.3
+    Date: Thu, 28 Nov 2013 19:56:39 GMT
+    
     {
-      "result": true
+      "username": "miguel"
     }
 
 These credentials can now be used to access protected resources:
 
-    $ curl -u miguel:python -X GET http://localhost:5000/api/resource
+    $ curl -u miguel:python -i -X GET http://127.0.0.1:5000/api/resource
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 30
+    Server: Werkzeug/0.9.4 Python/2.7.3
+    Date: Thu, 28 Nov 2013 20:02:25 GMT
+    
     {
       "data": "Hello, miguel!"
     }
 
 Using the wrong credentials the request is refused:
 
-    $ curl -u miguel:ruby -X GET http://localhost:5000/api/resource
+    $ curl -u miguel:ruby -i -X GET http://127.0.0.1:5000/api/resource
+    HTTP/1.0 401 UNAUTHORIZED
+    Content-Type: text/html; charset=utf-8
+    Content-Length: 19
+    WWW-Authenticate: Basic realm="Authentication Required"
+    Server: Werkzeug/0.9.4 Python/2.7.3
+    Date: Thu, 28 Nov 2013 20:03:18 GMT
+    
     Unauthorized Access
 
 Finally, to avoid sending username and password with every request an authentication token can be requested:
 
-    $ curl -u miguel:python -X GET http://localhost:5000/api/token
+    $ curl -u miguel:python -i -X GET http://127.0.0.1:5000/api/token
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 139
+    Server: Werkzeug/0.9.4 Python/2.7.3
+    Date: Thu, 28 Nov 2013 20:04:15 GMT
+    
     {
-      "token": "eyJleHAiOjEzODU1OTM3MzIsImlhdCI6MTM4NTU5MzEzMiwiYWxnIjoiSFMyNTYifQ.eyJpZCI6MX0.uc92MTwiB0vnyFG68PzCziwnPqCTFq_QwLOz5btOSgg"
+      "token": "eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc"
     }
 
 And now during the token validity period there is no need to send username and password to authenticate anymore:
 
-    $ curl -u eyJleHAiOjEzODU1OTM3MzIsImlhdI6MTM4NTU5MzEzMiwiYWxnIjoiSFMyNTYifQ.eyJpZCI6MX0.uc92MTwiB0vnyFG68PzCziwnPqCTFq_QwLOz5btOSgg:x -X GET http://localhost:5000/api/resource
+    $ curl -u eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc:unused -i -X GET http://127.0.0.1:5000/api/resource
+    HTTP/1.0 200 OK
+    Content-Type: application/json
+    Content-Length: 30
+    Server: Werkzeug/0.9.4 Python/2.7.3
+    Date: Thu, 28 Nov 2013 20:05:08 GMT
+    
     {
       "data": "Hello, miguel!"
     }
