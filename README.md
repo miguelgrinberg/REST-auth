@@ -52,7 +52,7 @@ API Documentation
 
     Return an authentication token.<br>
     This request must be authenticated using a HTTP Basic Authentication header.<br>
-    On success a JSON object is returned with a field `token` set to the authentication token for the user. This token is valid for 10 minutes from the time it was issued.<br>
+    On success a JSON object is returned with a field `token` set to the authentication token for the user and a field `duration` set to the (approximate) number of seconds the token is valid.<br>
     On failure status code 401 (unauthorized) is returned.
 
 - GET **/api/resource**
@@ -114,12 +114,13 @@ Finally, to avoid sending username and password with every request an authentica
     Date: Thu, 28 Nov 2013 20:04:15 GMT
     
     {
+      "duration": 600,
       "token": "eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc"
     }
 
 And now during the token validity period there is no need to send username and password to authenticate anymore:
 
-    $ curl -u eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc:unused -i -X GET http://127.0.0.1:5000/api/resource
+    $ curl -u eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc:x -i -X GET http://127.0.0.1:5000/api/resource
     HTTP/1.0 200 OK
     Content-Type: application/json
     Content-Length: 30
@@ -134,4 +135,12 @@ Once the token expires it cannot be used anymore and the client needs to request
 
 An interesting side effect of this implementation is that it is possible to use an unexpired token as authentication to request a new token that extends the expiration time. This effectively allows the client to change from one token to the next and never need to send username and password after the initial token was obtained.
 
+Change Log
+----------
+
+**v0.3** - Return token duration.
+
+**v0.2** - Return a 201 status code and Location header from */api/users* endpoint.
+
+**v0.1** - Initial release.
 
