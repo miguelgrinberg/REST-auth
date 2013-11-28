@@ -1,7 +1,7 @@
 REST-auth
 =========
 
-Companion application to my [RESTful Authentication with Flask](http://blog.miguelgrinberg.com/restful-authentication-with-flask) article.
+Companion application to my [RESTful Authentication with Flask](http://blog.miguelgrinberg.com/post/restful-authentication-with-flask) article.
 
 Installation
 ------------
