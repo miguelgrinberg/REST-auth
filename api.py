@@ -21,8 +21,8 @@ auth = HTTPBasicAuth()
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, index=True)
-    password_hash = db.Column(db.String)
+    username = db.Column(db.String(32), index=True)
+    password_hash = db.Column(db.String(64))
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
