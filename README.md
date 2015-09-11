@@ -27,7 +27,7 @@ To run the server use the following command:
      * Running on http://127.0.0.1:5000/
      * Restarting with reloader
 
-       		  OR
+OR
 
 To run a flask-restful server use the following:
 
