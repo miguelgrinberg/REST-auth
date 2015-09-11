@@ -27,6 +27,14 @@ To run the server use the following command:
      * Running on http://127.0.0.1:5000/
      * Restarting with reloader
 
+       		  OR
+
+To run a flask-restful server use the following:
+
+    (venv) $ python api.py
+     * Running on http://127.0.0.1:5000/
+     * Restarting with reloader
+
 Then from a different terminal window you can send requests.
 
 API Documentation
@@ -137,6 +145,8 @@ An interesting side effect of this implementation is that it is possible to use 
 
 Change Log
 ----------
+
+**v0.4** - Flask-Restful support.
 
 **v0.3** - Return token duration.
 
