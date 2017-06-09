@@ -58,7 +58,7 @@ API Documentation
 - GET **/api/resource**
 
     Return a protected resource.<br>
-    This request must be authenticated using a HTTP Basic Authentication header. Instead of username and password, the client can provide a valid authentication token in the username field. If using an authentication token the password field is not used and can be set to any value.<br>
+    This request must be authenticated using a HTTP Basic Authentication header. Instead of username and password, the client must provide a valid authentication token in the username field, the password field is not used and can be set to any value.<br>
     On success a JSON object with data for the authenticated user is returned.<br>
     On failure status code 401 (unauthorized) is returned.
 
@@ -79,32 +79,9 @@ The following `curl` command registers a new user with username `miguel` and pas
       "username": "miguel"
     }
 
-These credentials can now be used to access protected resources:
+These credentials can not be used to access protected resources, one should obtain a valid authentication token first.
 
-    $ curl -u miguel:python -i -X GET http://127.0.0.1:5000/api/resource
-    HTTP/1.0 200 OK
-    Content-Type: application/json
-    Content-Length: 30
-    Server: Werkzeug/0.9.4 Python/2.7.3
-    Date: Thu, 28 Nov 2013 20:02:25 GMT
-    
-    {
-      "data": "Hello, miguel!"
-    }
-
-Using the wrong credentials the request is refused:
-
-    $ curl -u miguel:ruby -i -X GET http://127.0.0.1:5000/api/resource
-    HTTP/1.0 401 UNAUTHORIZED
-    Content-Type: text/html; charset=utf-8
-    Content-Length: 19
-    WWW-Authenticate: Basic realm="Authentication Required"
-    Server: Werkzeug/0.9.4 Python/2.7.3
-    Date: Thu, 28 Nov 2013 20:03:18 GMT
-    
-    Unauthorized Access
-
-Finally, to avoid sending username and password with every request an authentication token can be requested:
+The authentication token helps to avoid sending username and password with every request. Also, the potential damage that can be caused if a token is leaked is much smaller due to their short life span. An authentication token can be requested by:
 
     $ curl -u miguel:python -i -X GET http://127.0.0.1:5000/api/token
     HTTP/1.0 200 OK
@@ -118,7 +95,7 @@ Finally, to avoid sending username and password with every request an authentica
       "token": "eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc"
     }
 
-And now during the token validity period there is no need to send username and password to authenticate anymore:
+And now during the token validity period, one can use it to access protected resources:
 
     $ curl -u eyJhbGciOiJIUzI1NiIsImV4cCI6MTM4NTY2OTY1NSwiaWF0IjoxMzg1NjY5MDU1fQ.eyJpZCI6MX0.XbOEFJkhjHJ5uRINh2JA1BPzXjSohKYDRT472wGOvjc:x -i -X GET http://127.0.0.1:5000/api/resource
     HTTP/1.0 200 OK
@@ -132,8 +109,6 @@ And now during the token validity period there is no need to send username and p
     }
 
 Once the token expires it cannot be used anymore and the client needs to request a new one. Note that in this last example the password is arbitrarily set to `x`, since the password isn't used for token authentication.
-
-An interesting side effect of this implementation is that it is possible to use an unexpired token as authentication to request a new token that extends the expiration time. This effectively allows the client to change from one token to the next and never need to send username and password after the initial token was obtained.
 
 Change Log
 ----------
