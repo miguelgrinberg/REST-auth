@@ -62,10 +62,11 @@ def verify_password(username_or_token, password):
 
 @app.route('/api/users', methods=['POST'])
 def new_user():
-    username = request.json.get('username')
-    password = request.json.get('password')
-    if username is None or password is None:
-        abort(400)    # missing arguments
+    try:
+        username = request.get_json()['username']
+        password = request.get_json()['password']
+    except (TypeError, KeyError):
+        abort(400) # missing arguments
     if User.query.filter_by(username=username).first() is not None:
         abort(400)    # existing user
     user = User(username=username)
@@ -96,7 +97,6 @@ def get_auth_token():
 def get_resource():
     return jsonify({'data': 'Hello, %s!' % g.user.username})
 
-if __name__ == '__main__':
-    if not os.path.exists('db.sqlite'):
-        db.create_all()
-    app.run(debug=True)
+
+if not os.path.exists('db.sqlite'):
+    db.create_all()
