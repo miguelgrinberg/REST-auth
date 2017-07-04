@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import os
 from flask import Flask, abort, request, jsonify, g, url_for
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.httpauth import HTTPBasicAuth
+from flask_sqlalchemy import SQLAlchemy
+from flask_httpauth import HTTPBasicAuth
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
@@ -95,6 +95,7 @@ def get_auth_token():
 @auth.login_required
 def get_resource():
     return jsonify({'data': 'Hello, %s!' % g.user.username})
+
 
 if __name__ == '__main__':
     if not os.path.exists('db.sqlite'):
