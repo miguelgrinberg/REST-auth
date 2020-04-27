@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import os
+import time
 from flask import Flask, abort, request, jsonify, g, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
+import jwt
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # initialization
 app = Flask(__name__)
@@ -25,26 +25,24 @@ class User(db.Model):
     password_hash = db.Column(db.String(64))
 
     def hash_password(self, password):
-        self.password_hash = pwd_context.encrypt(password)
+        self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
-        return pwd_context.verify(password, self.password_hash)
+        return check_password_hash(self.password_hash, password)
 
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
+    def generate_auth_token(self, expires_in=600):
+        return jwt.encode(
+            {'id': self.id, 'exp': time.time() + expires_in},
+            app.config['SECRET_KEY'], algorithm='HS256')
 
     @staticmethod
     def verify_auth_token(token):
-        s = Serializer(app.config['SECRET_KEY'])
         try:
-            data = s.loads(token)
-        except SignatureExpired:
-            return None    # valid token, but expired
-        except BadSignature:
-            return None    # invalid token
-        user = User.query.get(data['id'])
-        return user
+            data = jwt.decode(token, app.config['SECRET_KEY'],
+                              algorithms=['HS256'])
+        except:
+            return
+        return User.query.get(data['id'])
 
 
 @auth.verify_password
